@@ -46,7 +46,8 @@ CONFIG_RTW_SDIO_PM_KEEP_POWER = y
 ###################### MP HW TX MODE FOR VHT #######################
 CONFIG_MP_VHT_HW_TX_MODE = n
 ###################### Platform Related #######################
-CONFIG_PLATFORM_I386_PC = y
+CONFIG_PLATFORM_I386_PC = n
+CONFIG_PLATFORM_SYNOLOGY_DSM62_CEDARVIEW = y
 ###############################################################
 
 CONFIG_DRVEXT_MODULE = n
@@ -214,6 +215,15 @@ MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
 INSTALL_PREFIX :=
 endif
 
+ifeq ($(CONFIG_PLATFORM_SYNOLOGY_DSM62_CEDARVIEW), y)
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+ARCH := x86_64
+CROSS_COMPILE := /usr/local/x86_64-pc-linux-gnu/bin/x86_64-pc-linux-gnu-
+KVER := 3.10.105
+KSRC := /usr/local/x86_64-pc-linux-gnu/x86_64-pc-linux-gnu/sys-root/usr/lib/modules/DSM-6.2/build
+endif
+
 ifneq ($(KERNELRELEASE),)
 
 rtk_core :=	core/rtw_cmd.o \
@@ -269,7 +279,9 @@ installfw:
 
 install:
 	install -p -m 644 $(MODULE_NAME).ko  $(MODDESTDIR)
-	/sbin/depmod -a ${KVER}
+	ifneq ($(CONFIG_PLATFORM_SYNOLOGY_DSM62_CEDARVIEW), y)
+	  /sbin/depmod -a ${KVER}
+	endif
 
 uninstall:
 	rm -f $(MODDESTDIR)/$(MODULE_NAME).ko
